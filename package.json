@@ -1,0 +1,23 @@
+{
+  "name": "ttt",
+  "version": "0.0.1",
+  "description": "Tic Tac Toe server",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/namansood/ttt.git"
+  },
+  "author": "Naman Sood",
+  "license": "SEE LICENSE IN license.md",
+  "bugs": {
+    "url": "https://github.com/namansood/ttt/issues"
+  },
+  "homepage": "https://github.com/namansood/ttt#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.2.0"
+  }
+}
