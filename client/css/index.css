@@ -1,0 +1,20 @@
+*, *:before, *:after {
+	box-sizing: border-box;
+}
+
+#board {
+	height: 300px;
+	width: 300px;
+	margin: 3rem;
+	border-collapse: collapse;
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.square {
+	border: 1px solid;
+	font-size: 5rem;
+	line-height: 100px;
+	height: 100px;
+	width: 100px;
+}

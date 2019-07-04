@@ -23,6 +23,7 @@ io.on('connection', socket => {
 				x: socket.id,
 				o: null,
 				board: [],
+				boardSize: boardSize,
 				turn: null
 			};
 
@@ -37,6 +38,13 @@ io.on('connection', socket => {
 			rooms[room] = newRoom;
 		
 			cb('x');
+		}
+
+		else if(!rooms[room].x) {
+			console.log('joining as x');
+
+			rooms[room].x = socket.id;
+			cb('x');			
 		}
 
 		else if(!rooms[room].o && socket.id !== rooms[room].x) {
@@ -54,6 +62,22 @@ io.on('connection', socket => {
 
 	socket.on('get room info', room => sendRoomInfo(room));
 
+	socket.on('move', (room, move) => {
+		if(rooms[room] && // room exists
+			rooms[room].x && rooms[room].o && // both players exist
+			!rooms[room].board[move.i][move.j]) { // and that square is unoccupied
+			if(rooms[room].x === socket.id) {
+				rooms[room].board[move.i][move.j] = 'x';
+				sendRoomInfo(room);
+			}
+
+			else if(rooms[room].o === socket.id) {
+				rooms[room].board[move.i][move.j] = 'o';
+				sendRoomInfo(room);
+			}
+		}
+	});
+
 	socket.on('disconnect', () => {
 		removeFromRoom(socket.id, playerRoom);
 		console.log('user disconnected');
@@ -61,8 +85,8 @@ io.on('connection', socket => {
 
 	function removeFromRoom(id, room) {
 		if(rooms[room]) {
-			if(rooms[room].x === id) room.x = null;
-			else if(rooms[room].o === id) room.o = null;
+			if(rooms[room].x === id) rooms[room].x = null;
+			else if(rooms[room].o === id) rooms[room].o = null;
 		}
 	}
 
