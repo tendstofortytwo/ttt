@@ -48,9 +48,10 @@ io.on('connection', socket => {
 		else if(!rooms[room].o && socket.id !== rooms[room].x) {
 			console.log('joining as o');
 
-			if(rooms[room].x && rooms[room].o) start(room);
-
 			rooms[room].o = socket.id;
+
+			if(rooms[room].x && rooms[room].o) start(room);
+			
 			cb('o');
 		}
 
