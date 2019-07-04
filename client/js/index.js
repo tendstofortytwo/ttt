@@ -33,7 +33,7 @@ function drawBoard(board, size) {
 			const square = document.createElement('div');
 			square.classList.add('square');
 			
-			if(board[i][j] === 'x') square.innerHTML = '&cross;';
+			if(board[i][j] === 'x') square.innerHTML = '&times;';
 			else if(board[i][j] === 'o') square.innerHTML = '&#9675;'; // circle unicode
 
 			square.setAttribute('id', [i, j].join('-'));
