@@ -12,7 +12,7 @@ let rooms = {};
 io.on('connection', socket => {
 	console.log('user connected');
 
-	var playerRoom = null;
+	let playerRoom = null;
 
 	socket.on('join room', (room, cb) => {
 		playerRoom = room;
@@ -22,20 +22,15 @@ io.on('connection', socket => {
 			let newRoom = {
 				x: socket.id,
 				o: null,
-				board: [],
 				boardSize: boardSize,
 				turn: null
 			};
 
 			console.log('creating new room', room);
 
-			for(var i = 0; i < boardSize; i++) {
-				newRoom.board[i] = [];
-				for(var j = 0; j < boardSize; j++)
-					newRoom.board[i][j] = null;
-			}
-
 			rooms[room] = newRoom;
+
+			reset(room);
 		
 			cb('x');
 		}
@@ -44,11 +39,16 @@ io.on('connection', socket => {
 			console.log('joining as x');
 
 			rooms[room].x = socket.id;
+
+			if(rooms[room].x && rooms[room].o) start(room);
+
 			cb('x');			
 		}
 
 		else if(!rooms[room].o && socket.id !== rooms[room].x) {
 			console.log('joining as o');
+
+			if(rooms[room].x && rooms[room].o) start(room);
 
 			rooms[room].o = socket.id;
 			cb('o');
@@ -66,13 +66,17 @@ io.on('connection', socket => {
 		if(rooms[room] && // room exists
 			rooms[room].x && rooms[room].o && // both players exist
 			!rooms[room].board[move.i][move.j]) { // and that square is unoccupied
-			if(rooms[room].x === socket.id) {
+			if(rooms[room].x === socket.id && rooms[room].turn === 'x') {
 				rooms[room].board[move.i][move.j] = 'x';
+				rooms[room].turn = 'o';
+				checkForCompletion(room, 'x');
 				sendRoomInfo(room);
 			}
 
-			else if(rooms[room].o === socket.id) {
+			else if(rooms[room].o === socket.id && rooms[room].turn === 'o') {
 				rooms[room].board[move.i][move.j] = 'o';
+				rooms[room].turn = 'x';
+				checkForCompletion(room, 'o');
 				sendRoomInfo(room);
 			}
 		}
@@ -90,6 +94,18 @@ io.on('connection', socket => {
 		}
 	}
 
+	function announce(room, text) {
+		io.in(room).emit('announcement', text);
+	}
+
+	function start(room) {
+		if(rooms[room]) {
+			reset(room);
+			rooms[room].turn = 'x';
+			announce(room, 'Starting match!');
+		}
+	}
+
 	function sendRoomInfo(room) {
 		console.log('sending room info', room);
 
@@ -101,6 +117,66 @@ io.on('connection', socket => {
 
 		else {
 			io.in(room).emit('room info', null);
+		}
+	}
+
+	function checkForCompletion(room, lastPlayer) {
+		// only the player who just played can win on that move
+		const board = rooms[room].board;
+
+		let diagWin = true,
+			antiDiagWin = true,
+			rows = new Array(boardSize),
+			cols = new Array(boardSize);
+
+		for(let i = 0; i < boardSize; i++) {
+			rows[i] = true;
+			cols[i] = true;
+		}
+
+		let fullBoard = true;
+
+		for(let i = 0; i < boardSize; i++) {
+			for(let j = 0; j < boardSize; j++) {
+				if(!board[i][j]) fullBoard = false;
+
+				if(board[i][j] !== lastPlayer) {
+					if(i === j) {
+						diagWin = false;
+					}
+					if(i + j === boardSize - 1) {
+						antiDiagWin = false;
+					}
+					rows[i] = false;
+					cols[j] = false;
+				}
+			}
+		}
+
+		let rowWin = rows.indexOf(true) >= 0,
+			colWin = cols.indexOf(true) >= 0;
+
+		if(rowWin || colWin || diagWin || antiDiagWin) {
+			console.log('winner', lastPlayer);
+			announce(room, lastPlayer + ' wins!');
+		}
+
+		else if(fullBoard) {
+			console.log('draw');
+			announce(room, 'Draw!');
+		}
+	}
+
+	function reset(room) {
+		if(rooms[room]) {
+			rooms[room].board = [];
+
+			for(let i = 0; i < rooms[room].boardSize; i++) {
+				rooms[room].board[i] = [];
+				for(let j = 0; j < rooms[room].boardSize; j++) {
+					rooms[room].board[i][j] = null;
+				}
+			}
 		}
 	}
 });

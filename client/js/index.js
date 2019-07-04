@@ -17,6 +17,10 @@ function join(room) {
 
 		drawBoard(room.board, room.boardSize);
 	});
+
+	socket.on('announcement', msg => {
+		alert(msg);
+	})
 }
 
 function drawBoard(board, size) {
