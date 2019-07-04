@@ -56,4 +56,6 @@ function empty(el) {
 		el.removeChild(el.firstChild);
 	}
 }
+
+roomName = prompt('Enter a room name to join.');
 join(roomName);
